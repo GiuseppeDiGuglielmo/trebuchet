@@ -1,0 +1,4 @@
+[submodule "catapult_examples"]
+	path = catapult_examples
+	url = git@github.com:GiuseppeDiGuglielmo/catapult_examples.git
+	branch = hls4ml-dev
