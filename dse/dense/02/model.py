@@ -56,14 +56,17 @@ def get_area_latency_from_file(filename, layer):
     return None, None
 
 def main(args):
-    ## Define output files/location:
-    model_name = 'dense'
-    proj_name = model_name
-    out_dir = f'{args.project_dir}/my-Catapult-{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}'
-
+    ## TODO: move this hardcoded knobs to the interface so we can use the flags
+    ## --iotype "io_stream"
+    ## --strategy "Resource"
     ## Define some knobs
     io_type = 'io_stream'
     strategy = 'Resource'
+
+    ## Define output files/location:
+    model_name = 'dense'
+    proj_name = model_name
+    out_dir = f'{args.project_dir}/my-Catapult-{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{io_type}-{strategy}'
 
     ## Determine the directory containing this model.py script in order to locate the associated .dat file
     sfd = os.path.dirname(__file__)
@@ -140,7 +143,7 @@ def main(args):
     ## Create .yml file
     print("============================================================================================")
     print('Writing YAML config file: '+proj_name+'_config.yml')
-    with open(f'{args.project_dir}/{proj_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}_config.yml', 'w') as yaml_file:
+    with open(f'{args.project_dir}/{proj_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{io_type}-{strategy}_config.yml', 'w') as yaml_file:
         yaml.dump(config_ccs, yaml_file, explicit_start=False, default_flow_style=False)
 
     print("\n============================================================================================")
