@@ -60,13 +60,13 @@ def main(args):
     ## --iotype "io_stream"
     ## --strategy "Resource"
     ## Define some knobs
-    io_type = 'io_stream'
-    strategy = 'Resource'
+    args.iotype = 'io_stream'
+    args.strategy = 'Resource'
 
     ## Define output files/location:
     model_name = 'dense'
     proj_name = model_name
-    out_dir = f'{args.project_dir}/my-Catapult-{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{io_type}-{strategy}'
+    out_dir = f'{args.project_dir}/my-Catapult-{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{args.iotype}-{args.strategy}'
 
     ## Determine the directory containing this model.py script in order to locate the associated .dat file
     sfd = os.path.dirname(__file__)
@@ -126,7 +126,7 @@ def main(args):
 
     ## General technology settings
     config_ccs['ClockPeriod'] = 10
-    config_ccs['IOType'] = io_type
+    config_ccs['IOType'] = args.iotype
     config_ccs['ASICLibs'] = 'saed32rvt_tt0p78v125c_beh'
     config_ccs['FIFO'] = 'hls4ml_lib.mgc_pipe_mem'
 
@@ -136,14 +136,14 @@ def main(args):
             'Model': {
                 'Precision': args.precision,
                 'ReuseFactor': args.reuse_factor,
-                'Strategy': strategy
+                'Strategy': args.strategy
                 },
             }
 
     ## Create .yml file
     print("============================================================================================")
     print('Writing YAML config file: '+proj_name+'_config.yml')
-    with open(f'{args.project_dir}/{proj_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{io_type}-{strategy}_config.yml', 'w') as yaml_file:
+    with open(f'{args.project_dir}/{proj_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{args.iotype}-{args.strategy}_config.yml', 'w') as yaml_file:
         yaml.dump(config_ccs, yaml_file, explicit_start=False, default_flow_style=False)
 
     print("\n============================================================================================")
@@ -174,8 +174,8 @@ def main(args):
             writer.writerow(
                     {
                         'Layer': model_name,
-                        'IOType': io_type,
-                        'Strategy': strategy,
+                        'IOType': args.iotype,
+                        'Strategy': args.strategy,
                         'Inputs': args.inputs,
                         'Outputs': args.outputs,
                         'ReuseFactor': args.reuse_factor,
