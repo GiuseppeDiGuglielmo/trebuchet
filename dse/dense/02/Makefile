@@ -6,6 +6,8 @@ help:
 
 PYTHONPATH ?= ${MGC_HOME}/shared/pkgs/ccs_hls4ml/hls4ml
 
+IO ?= "io_stream"
+ST ?= "Resource"
 RF ?= 1
 IN ?= 8
 OU ?= 2
@@ -21,6 +23,8 @@ DATA_DIR ?= data
 run-ml:
 	PYTHONPATH=$(PYTHONPATH) \
 		python model.py \
+			--iotype $(IO) \
+			--strategy $(ST) \
 			--reuse_factor $(RF) \
 			--inputs $(IN) \
 			--outputs $(OU) \
@@ -33,6 +37,8 @@ run-ml-hls:
 	PYTHONPATH=$(PYTHONPATH) \
 		python model.py \
 			--synth \
+			--iotype $(IO) \
+			--strategy $(ST) \
 			--reuse_factor $(RF) \
 			--inputs $(IN) \
 			--outputs $(OU) \
@@ -42,7 +48,7 @@ run-ml-hls:
 .PHONY: run-ml-hls
 
 run-hls:
-	cd $(PRJ_DIR)/my-Catapult-$(MODEL)-in$(PADDED_IN)-ou$(PADDED_OUT)-rf$(PADDED_RF) && \
+	cd $(PRJ_DIR)/my-Catapult-$(MODEL)-in$(PADDED_IN)-ou$(PADDED_OUT)-rf$(PADDED_RF)-$(IO)-$(ST) && \
 		catapult -file build_prj.tcl
 .PHONY: run-hls
 

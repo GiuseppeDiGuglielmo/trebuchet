@@ -56,13 +56,6 @@ def get_area_latency_from_file(filename, layer):
     return None, None
 
 def main(args):
-    ## TODO: move this hardcoded knobs to the interface so we can use the flags
-    ## --iotype "io_stream"
-    ## --strategy "Resource"
-    ## Define some knobs
-    args.iotype = 'io_stream'
-    args.strategy = 'Resource'
-
     ## Define output files/location:
     model_name = 'dense'
     proj_name = model_name
@@ -190,6 +183,8 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Configure and convert the model for Catapult HLS')
+    parser.add_argument('--iotype', type=str, default='io_stream', help='Specify the layer interface (IOType)')
+    parser.add_argument('--strategy', type=str, default='Resource', help='Specify the layer implementation (Strategy)')
     parser.add_argument('--reuse_factor', type=int, default=2, help='Specify the ReuseFactor value')
     parser.add_argument('--precision', type=str, default='ac_fixed<16,6,true>', help='Specify the Dense layer precision')
     parser.add_argument('--inputs', type=int, default=8, help='Specify the Dense layer inputs')
