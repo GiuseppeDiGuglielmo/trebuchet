@@ -135,8 +135,9 @@ def main(args):
 
     ## Create .yml file
     print("============================================================================================")
-    print('Writing YAML config file: '+proj_name+'_config.yml')
-    with open(f'{args.project_dir}/{proj_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{args.iotype}-{args.strategy}_config.yml', 'w') as yaml_file:
+    config_file_yml = f'{args.project_dir}/{proj_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{args.iotype}-{args.strategy}_config.yml'
+    print(f'Writing YAML config file: {config_file_yml}')
+    with open(config_file_yml, 'w') as yaml_file:
         yaml.dump(config_ccs, yaml_file, explicit_start=False, default_flow_style=False)
 
     print("\n============================================================================================")
