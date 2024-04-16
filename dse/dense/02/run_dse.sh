@@ -1,3 +1,5 @@
+IO="io_stream"
+ST="Resource"
 #for i in 128; do
 #    for o in 128; do
 #        for r in $(seq 1 $i); do
@@ -22,7 +24,7 @@
 for i in 4; do
     for o in 4; do
         for r in $(seq 1 $i); do
-            IN=$i OU=$o RF=$r make run-ml-hls
+            IN=$i OU=$o RF=$r IO=$IO ST=$ST make run-ml-hls
         done
     done
 done

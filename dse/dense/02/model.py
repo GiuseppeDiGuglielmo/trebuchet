@@ -56,17 +56,10 @@ def get_area_latency_from_file(filename, layer):
     return None, None
 
 def main(args):
-    ## TODO: move this hardcoded knobs to the interface so we can use the flags
-    ## --iotype "io_stream"
-    ## --strategy "Resource"
-    ## Define some knobs
-    io_type = 'io_stream'
-    strategy = 'Resource'
-
     ## Define output files/location:
     model_name = 'dense'
     proj_name = model_name
-    out_dir = f'{args.project_dir}/my-Catapult-{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{io_type}-{strategy}'
+    out_dir = f'{args.project_dir}/my-Catapult-{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{args.iotype}-{args.strategy}'
 
     ## Determine the directory containing this model.py script in order to locate the associated .dat file
     sfd = os.path.dirname(__file__)
@@ -126,7 +119,7 @@ def main(args):
 
     ## General technology settings
     config_ccs['ClockPeriod'] = 10
-    config_ccs['IOType'] = io_type
+    config_ccs['IOType'] = args.iotype
     config_ccs['ASICLibs'] = 'saed32rvt_tt0p78v125c_beh'
     config_ccs['FIFO'] = 'hls4ml_lib.mgc_pipe_mem'
 
@@ -136,14 +129,14 @@ def main(args):
             'Model': {
                 'Precision': args.precision,
                 'ReuseFactor': args.reuse_factor,
-                'Strategy': strategy
+                'Strategy': args.strategy
                 },
             }
 
     ## Create .yml file
     print("============================================================================================")
     print('Writing YAML config file: '+proj_name+'_config.yml')
-    with open(f'{args.project_dir}/{proj_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{io_type}-{strategy}_config.yml', 'w') as yaml_file:
+    with open(f'{args.project_dir}/{proj_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{args.iotype}-{args.strategy}_config.yml', 'w') as yaml_file:
         yaml.dump(config_ccs, yaml_file, explicit_start=False, default_flow_style=False)
 
     print("\n============================================================================================")
@@ -174,8 +167,8 @@ def main(args):
             writer.writerow(
                     {
                         'Layer': model_name,
-                        'IOType': io_type,
-                        'Strategy': strategy,
+                        'IOType': args.iotype,
+                        'Strategy': args.strategy,
                         'Inputs': args.inputs,
                         'Outputs': args.outputs,
                         'ReuseFactor': args.reuse_factor,
@@ -190,6 +183,8 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Configure and convert the model for Catapult HLS')
+    parser.add_argument('--iotype', type=str, default='io_stream', help='Specify the layer interface (IOType)')
+    parser.add_argument('--strategy', type=str, default='Resource', help='Specify the layer implementation (Strategy)')
     parser.add_argument('--reuse_factor', type=int, default=2, help='Specify the ReuseFactor value')
     parser.add_argument('--precision', type=str, default='ac_fixed<16,6,true>', help='Specify the Dense layer precision')
     parser.add_argument('--inputs', type=int, default=8, help='Specify the Dense layer inputs')
