@@ -4,7 +4,8 @@ help:
 	@echo "INFO: make <TAB> to show targets"
 .PHONY: help
 
-PYTHONPATH ?= ${MGC_HOME}/shared/pkgs/ccs_hls4ml/hls4ml
+#PYTHONPATH ?= ${MGC_HOME}/shared/pkgs/ccs_hls4ml/hls4ml
+PYTHONPATH ?= /asic/projects/C/CATAPULT/gdg/catapult_hls4ml_dev/2024.1/ccs_hls4ml/hls4ml
 
 IO ?= "io_stream"
 ST ?= "Resource"
@@ -47,11 +48,6 @@ run-ml-hls:
 			--data_dir $(DATA_DIR)
 .PHONY: run-ml-hls
 
-run-hls:
-	cd $(PRJ_DIR)/my-Catapult-$(MODEL)-in$(PADDED_IN)-ou$(PADDED_OUT)-rf$(PADDED_RF)-$(IO)-$(ST) && \
-		catapult -file build_prj.tcl
-.PHONY: run-hls
-
 run-dse:
 	./run_dse.sh
 .PHONY: run-dse
@@ -63,7 +59,8 @@ jupyter:
 .PHONY: jupyter
 
 clean:
-	rm -rf hls4ml_prjs/my-Catapult*
+	rm -rf hls4ml_prjs/*_prj*
+	rm -f hls4ml_prjs/*.yml
 .PHONY: clean
 
 ultraclean: clean
@@ -76,5 +73,6 @@ ultraclean: clean
 	rm -f tb_input_features.dat
 	rm -f tb_output_predictions.dat
 	rm -f y_test_labels.dat
+	rm -rf __pycache__
 .PHONY: clean
 

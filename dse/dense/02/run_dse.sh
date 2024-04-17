@@ -1,5 +1,5 @@
-IO="io_stream"
-ST="Resource"
+IO="io_parallel"
+ST="Latency"
 #for i in 128; do
 #    for o in 128; do
 #        for r in $(seq 1 $i); do

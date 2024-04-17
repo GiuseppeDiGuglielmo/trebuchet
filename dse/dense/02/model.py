@@ -28,13 +28,15 @@ def main(args):
     model_name = 'dense'
     proj_name = model_name
 
-    HLS4ML_PRJ_DIR = f'{args.project_dir}/my-Catapult-{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{args.iotype}-{args.strategy}'
+    W, I, S = parse_ac_fixed(args.precision)
+
+    HLS4ML_PRJ_DIR = f'{args.project_dir}/hls4ml-{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-w{W:02d}i{I:02d}{S}-{args.iotype.replace("_", "")}-{args.strategy.lower()}_prj'
     TB_INPUT_FEATURES_DAT = f'{args.data_dir}/tb_input_features-in{args.inputs:03d}-ou{args.outputs:03d}.dat'
     TB_OUTPUT_PREDICTIONS_DAT = f'{args.data_dir}/tb_output_predictions-in{args.inputs:03d}-ou{args.outputs:03d}.dat'
     Y_TEST_LABELS_DAT = f'{args.data_dir}/y_test_labels-in{args.inputs:03d}-ou{args.outputs:03d}.dat'
     KERAS_JSON = f'{args.model_dir}/{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}.json'
     KERAS_H5 = f'{args.model_dir}/{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}_weights.h5'
-    CONFIG_FILE_YML = f'{args.project_dir}/{proj_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{args.iotype}-{args.strategy}_config.yml'
+    CONFIG_FILE_YML = f'{args.project_dir}/{proj_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-w{W:02d}i{I:02d}{S}-{args.iotype.replace("_", "")}-{args.strategy.lower()}_config.yml'
     CATAPULT_HLS4ML_TXT = f'{HLS4ML_PRJ_DIR}/{proj_name}_prj/{model_name}.v1/nnet_layer_results.txt'
 
     ## Determine the directory containing this model.py script in order to locate the associated .dat file
@@ -96,7 +98,7 @@ def main(args):
     ## General technology settings
     config_ccs['ClockPeriod'] = 10
     config_ccs['IOType'] = args.iotype
-    config_ccs['ASICLibs'] = 'saed32rvt_tt0p78v125c_beh'
+    config_ccs['ASICLibs'] = 'nangate-45nm_beh'
     config_ccs['FIFO'] = 'hls4ml_lib.mgc_pipe_mem'
 
     ## Post-training qunatization
@@ -154,20 +156,22 @@ def main(args):
     else:
         print('============================================================================================')
         print('Skipping HLS - To run Catapult directly:')
-        print('cd ' + HLS4ML_PRJ_DIR + '; catapult -file build_prj.tcl')
+        print(f'cd {HLS4ML_PRJ_DIR}; catapult -file build_prj.tcl')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Configure and convert the model for Catapult HLS')
-    parser.add_argument('--iotype', type=str, default='io_stream', help='Specify the layer interface (IOType)')
-    parser.add_argument('--strategy', type=str, default='Resource', help='Specify the layer implementation (Strategy)')
-    parser.add_argument('--reuse_factor', type=int, default=2, help='Specify the ReuseFactor value')
-    parser.add_argument('--precision', type=str, default='ac_fixed<16,6,true>', help='Specify the Dense layer precision')
     parser.add_argument('--inputs', type=int, default=8, help='Specify the Dense layer inputs')
     parser.add_argument('--outputs', type=int, default=2, help='Specify the Dense layer outputs')
-    parser.add_argument('--synth', action='store_true', help='Specify whether to perform Catapult build and synthesis')
+    parser.add_argument('--reuse_factor', type=int, default=2, help='Specify the ReuseFactor value')
+    parser.add_argument('--precision', type=str, default='ac_fixed<16,6,true>', help='Specify the Dense layer precision')
+    parser.add_argument('--iotype', type=str, default='io_stream', help='Specify the layer interface (IOType)')
+    parser.add_argument('--strategy', type=str, default='Resource', help='Specify the layer implementation (Strategy)')
+    #
     parser.add_argument('--project_dir', type=str, default='hls4ml_prjs', help='Specify the base directory for the hls4ml project')
     parser.add_argument('--model_dir', type=str, default='models', help='Specify the base directory for the model files')
     parser.add_argument('--data_dir', type=str, default='data', help='Specify the base directory for the data files')
+    #
+    parser.add_argument('--synth', action='store_true', help='Specify whether to perform Catapult build and synthesis')
     args = parser.parse_args()
 
     main(args)
