@@ -125,19 +125,20 @@ def main(args):
     if args.synth:
         print('============================================================================================')
         print('Synthesizing HLS C++ model using Catapult')
-        hls_model_ccs.build(csim=True, synth=True, cosim=True, validation=False, vsynth=False, bup=False)
+        hls_model_ccs.build(csim=True, synth=False, cosim=True, validation=False, vsynth=True, bup=False)
         # hls_model_ccs.build()
 
         ## Collect results from Catapult logs
-        area, latency = get_area_latency_from_file(CATAPULT_HLS4ML_TXT, model_name)
+        ## TODO: Add here a function that collects Area, Latency, and II results from the Catapult .rpt files
+        area_hls, latency_hls, ii_hls = 0, 0, 0 #get_area_latency_from_file(CATAPULT_HLS4ML_TXT, model_name)
 
         ## Print results on console
-        print(model_name, args.inputs, args.outputs, args.reuse_factor, args.precision, area, latency)
+        print(model_name, args.inputs, args.outputs, args.reuse_factor, args.precision, area_hls, latency_hls, ii_hls)
 
         ## Append results to CSV file
         file_exists = os.path.isfile('dse.csv')
         with open('dse.csv', 'a', newline='') as csvfile:
-            fieldnames = ['Layer', 'IOType', 'Strategy', 'Inputs', 'Outputs', 'ReuseFactor', 'Precision', 'Area', 'Latency']
+            fieldnames = ['Layer', 'IOType', 'Strategy', 'Inputs', 'Outputs', 'ReuseFactor', 'Precision', 'AreaHLS', 'LatencyHLS', 'IIHLS']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             if not file_exists:
                 writer.writeheader()
@@ -150,8 +151,9 @@ def main(args):
                         'Outputs': args.outputs,
                         'ReuseFactor': args.reuse_factor,
                         'Precision': args.precision,
-                        'Area': area,
-                        'Latency': latency
+                        'AreaHLS': area_hls,
+                        'LatencyHLS': latency_hls,
+                        'IIHLS': ii_hls
                     })
     else:
         print('============================================================================================')
