@@ -1,4 +1,11 @@
+# Disable some console warnings on the ASIC-group servers
 import os
+os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+from ml_utils import *
+from hls_utils import *
+
 import csv
 import shutil
 import hls4ml
@@ -16,50 +23,19 @@ from tensorflow.keras.models import load_model
 from sklearn.metrics import accuracy_score
 from qkeras import *
 
-## Function to create a simple MLP model
-def create_model(args):
-    model = tf.keras.Sequential()
-    model.add(layers.Input(shape=(args.inputs,), name='input1'))
-    model.add(layers.Flatten(name='flatten1'))
-    model.add(layers.Dense(args.outputs, name='dense1'))
-
-    return model
-
-## Function to save model architecture, weights, and configuration
-def load_model_if_exists(args, name):
-    model = None
-    filename = f'{args.model_dir}/{name}-in{args.inputs:03d}-ou{args.outputs:03d}.h5'
-    if os.path.exists(filename):
-        model = load_model(filename)
-    return model
-
-def save_model(args, model, name):
-    if name is None:
-        name = model.name
-    filename_prefix = f'{args.model_dir}/{name}-in{args.inputs:03d}-ou{args.outputs:03d}'
-    model.save(f'{filename_prefix}.h5')
-    model.save_weights(f'{filename_prefix}_weights.h5')
-    with open(f'{filename_prefix}.json', 'w') as outfile:
-        outfile.write(model.to_json())
-    return
-
-## Function to parse Catapult results
-def get_area_latency_from_file(filename, layer):
-    with open(filename, 'r') as file:
-        lines = file.readlines()
-    for line in lines:
-        if layer in line:
-            parts = line.split()
-            area = parts[1]
-            latency = parts[2]
-            return area, latency
-    return None, None
-
 def main(args):
-    ## Define output files/location:
+    ## Define output files/locations:
     model_name = 'dense'
     proj_name = model_name
-    out_dir = f'{args.project_dir}/my-Catapult-{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{args.iotype}-{args.strategy}'
+
+    HLS4ML_PRJ_DIR = f'{args.project_dir}/my-Catapult-{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{args.iotype}-{args.strategy}'
+    TB_INPUT_FEATURES_DAT = f'{args.data_dir}/tb_input_features-in{args.inputs:03d}-ou{args.outputs:03d}.dat'
+    TB_OUTPUT_PREDICTIONS_DAT = f'{args.data_dir}/tb_output_predictions-in{args.inputs:03d}-ou{args.outputs:03d}.dat'
+    Y_TEST_LABELS_DAT = f'{args.data_dir}/y_test_labels-in{args.inputs:03d}-ou{args.outputs:03d}.dat'
+    KERAS_JSON = f'{args.model_dir}/{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}.json'
+    KERAS_H5 = f'{args.model_dir}/{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}_weights.h5'
+    CONFIG_FILE_YML = f'{args.project_dir}/{proj_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{args.iotype}-{args.strategy}_config.yml'
+    CATAPULT_HLS4ML_TXT = f'{HLS4ML_PRJ_DIR}/{proj_name}_prj/{model_name}.v1/nnet_layer_results.txt'
 
     ## Determine the directory containing this model.py script in order to locate the associated .dat file
     sfd = os.path.dirname(__file__)
@@ -90,9 +66,9 @@ def main(args):
         model.fit(x_train, y_train, epochs=10)
 
     ## Save input features and model predictions
-    np.savetxt(f'{args.data_dir}/tb_input_features-in{args.inputs:03d}-ou{args.outputs:03d}.dat', x_test, fmt='%f')
-    np.savetxt(f'{args.data_dir}/tb_output_predictions-in{args.inputs:03d}-ou{args.outputs:03d}.dat', np.argmax(model.predict(x_test), axis=1), fmt='%d')
-    np.savetxt(f'{args.data_dir}/y_test_labels-in{args.inputs:03d}-ou{args.outputs:03d}.dat', y_test, fmt='%d')
+    np.savetxt(TB_INPUT_FEATURES_DAT, x_test, fmt='%f')
+    np.savetxt(TB_OUTPUT_PREDICTIONS_DAT, np.argmax(model.predict(x_test), axis=1), fmt='%d')
+    np.savetxt(Y_TEST_LABELS_DAT, y_test, fmt='%d')
 
     save_model(args, model, name=model_name)
     print(hls4ml.__version__)
@@ -109,13 +85,13 @@ def main(args):
     ## General project settings
     config_ccs['Backend'] = 'Catapult'
     config_ccs['ProjectName'] = proj_name
-    config_ccs['OutputDir'] = out_dir
+    config_ccs['OutputDir'] = HLS4ML_PRJ_DIR
 
     ## Model information files saved in the previous step
-    config_ccs['KerasJson'] = f'{args.model_dir}/{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}.json'
-    config_ccs['KerasH5'] = f'{args.model_dir}/{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}_weights.h5'
-    config_ccs['InputData'] = f'{args.data_dir}/tb_input_features-in{args.inputs:03d}-ou{args.outputs:03d}.dat'
-    config_ccs['OutputPredictions'] = f'{args.data_dir}/tb_output_predictions-in{args.inputs:03d}-ou{args.outputs:03d}.dat'
+    config_ccs['KerasJson'] = KERAS_JSON
+    config_ccs['KerasH5'] = KERAS_H5
+    config_ccs['InputData'] = TB_INPUT_FEATURES_DAT
+    config_ccs['OutputPredictions'] = TB_OUTPUT_PREDICTIONS_DAT
 
     ## General technology settings
     config_ccs['ClockPeriod'] = 10
@@ -135,9 +111,8 @@ def main(args):
 
     ## Create .yml file
     print("============================================================================================")
-    config_file_yml = f'{args.project_dir}/{proj_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-{args.iotype}-{args.strategy}_config.yml'
-    print(f'Writing YAML config file: {config_file_yml}')
-    with open(config_file_yml, 'w') as yaml_file:
+    print(f'Writing YAML config file: {CONFIG_FILE_YML}')
+    with open(CONFIG_FILE_YML, 'w') as yaml_file:
         yaml.dump(config_ccs, yaml_file, explicit_start=False, default_flow_style=False)
 
     print("\n============================================================================================")
@@ -152,8 +127,7 @@ def main(args):
         # hls_model_ccs.build()
 
         ## Collect results from Catapult logs
-        result_file = f'{out_dir}/{proj_name}_prj/{model_name}.v1/nnet_layer_results.txt'
-        area, latency = get_area_latency_from_file(result_file, model_name)
+        area, latency = get_area_latency_from_file(CATAPULT_HLS4ML_TXT, model_name)
 
         ## Print results on console
         print(model_name, args.inputs, args.outputs, args.reuse_factor, args.precision, area, latency)
@@ -180,7 +154,7 @@ def main(args):
     else:
         print("============================================================================================")
         print("Skipping HLS - To run Catapult directly:")
-        print('cd ' + out_dir + '; catapult -file build_prj.tcl')
+        print('cd ' + HLS4ML_PRJ_DIR + '; catapult -file build_prj.tcl')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Configure and convert the model for Catapult HLS')
