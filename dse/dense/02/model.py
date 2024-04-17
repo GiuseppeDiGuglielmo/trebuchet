@@ -110,19 +110,19 @@ def main(args):
             }
 
     ## Create .yml file
-    print("============================================================================================")
+    print('============================================================================================')
     print(f'Writing YAML config file: {CONFIG_FILE_YML}')
     with open(CONFIG_FILE_YML, 'w') as yaml_file:
         yaml.dump(config_ccs, yaml_file, explicit_start=False, default_flow_style=False)
 
-    print("\n============================================================================================")
-    print("HLS4ML converting keras model/Catapult to HLS C++")
+    print('\n============================================================================================')
+    print('HLS4ML converting keras model/Catapult to HLS C++')
     hls_model_ccs = hls4ml.converters.keras_to_hls(config_ccs)
     hls_model_ccs.compile()
 
     if args.synth:
-        print("============================================================================================")
-        print("Synthesizing HLS C++ model using Catapult")
+        print('============================================================================================')
+        print('Synthesizing HLS C++ model using Catapult')
         hls_model_ccs.build(csim=True, synth=True, cosim=True, validation=False, vsynth=False, bup=False)
         # hls_model_ccs.build()
 
@@ -152,8 +152,8 @@ def main(args):
                         'Latency': latency
                     })
     else:
-        print("============================================================================================")
-        print("Skipping HLS - To run Catapult directly:")
+        print('============================================================================================')
+        print('Skipping HLS - To run Catapult directly:')
         print('cd ' + HLS4ML_PRJ_DIR + '; catapult -file build_prj.tcl')
 
 if __name__ == '__main__':
