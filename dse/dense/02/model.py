@@ -38,7 +38,8 @@ def main(args):
     KERAS_H5 = f'{args.model_dir}/{model_name}-in{args.inputs:03d}-ou{args.outputs:03d}_weights.h5'
     CONFIG_FILE_YML = f'{args.project_dir}/{proj_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-w{W:02d}i{I:02d}{S}-{args.iotype.replace("_", "")}-{args.strategy.lower()}_config.yml'
     CATAPULT_HLS4ML_TXT = f'{HLS4ML_PRJ_DIR}/{proj_name}_prj/{model_name}.v1/nnet_layer_results.txt'
-
+    CATAPULT_RTL_RPT = f'{HLS4ML_PRJ_DIR}/{proj_name}_prj/{model_name}.v1/rtl.rpt'
+	
     ## Determine the directory containing this model.py script in order to locate the associated .dat file
     sfd = os.path.dirname(__file__)
 
@@ -130,7 +131,7 @@ def main(args):
 
         ## Collect results from Catapult logs
         ## TODO: Add here a function that collects Area, Latency, and II results from the Catapult .rpt files
-        area_hls, latency_hls, ii_hls = 0, 0, 0 #get_area_latency_from_file(CATAPULT_HLS4ML_TXT, model_name)
+        area_hls, latency_hls, ii_hls = get_area_latency_ii_from_file(CATAPULT_RTL_RPT)
 
         ## Print results on console
         print(model_name, args.inputs, args.outputs, args.reuse_factor, args.precision, area_hls, latency_hls, ii_hls)

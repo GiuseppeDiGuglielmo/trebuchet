@@ -41,3 +41,18 @@ def parse_ac_fixed(input_string):
     else:
         # Return None or raise an exception if no match is found
         return None
+
+
+def get_area_latency_ii_from_file(filename):
+    with open(filename, 'r') as file:
+        lines = file.readlines()
+        area, latency,ii = 0,0,0
+    for line in lines: 
+        if re.match(r"^  Design Total:", line, flags=re.IGNORECASE):
+            values = line.split()[3:5]
+            latency = values[0]
+            ii = values[1]
+        if re.match(r"^  Total Area Score:", line, flags=re.IGNORECASE): 
+            area = line.split()[-1]
+            break
+    return area, latency, ii
