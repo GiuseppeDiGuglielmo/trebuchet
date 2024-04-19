@@ -42,8 +42,7 @@ def parse_ac_fixed(input_string):
         # Return None or raise an exception if no match is found
         return None
 
-
-def get_area_latency_ii_from_file(filename):
+def get_hls_area_latency_ii_from_file(filename):
     with open(filename, 'r') as file:
         lines = file.readlines()
         area, latency,ii = 0,0,0
@@ -56,3 +55,8 @@ def get_area_latency_ii_from_file(filename):
             area = line.split()[-1]
             break
     return area, latency, ii
+
+# TODO: Edit this
+def get_rc_area(filename):
+    return 0
+

@@ -39,7 +39,8 @@ def main(args):
     CONFIG_FILE_YML = f'{args.project_dir}/{proj_name}-in{args.inputs:03d}-ou{args.outputs:03d}-rf{args.reuse_factor:03d}-w{W:02d}i{I:02d}{S}-{args.iotype.replace("_", "")}-{args.strategy.lower()}_config.yml'
     CATAPULT_HLS4ML_TXT = f'{HLS4ML_PRJ_DIR}/{proj_name}_prj/{model_name}.v1/nnet_layer_results.txt'
     CATAPULT_RTL_RPT = f'{HLS4ML_PRJ_DIR}/{proj_name}_prj/{model_name}.v1/rtl.rpt'
-	
+    RTLCOMPILER_LOG = f'{HLS4ML_PRJ_DIR}/{proj_name}_prj/{model_name}.v1/rc.log'
+
     ## Determine the directory containing this model.py script in order to locate the associated .dat file
     sfd = os.path.dirname(__file__)
 
@@ -130,16 +131,18 @@ def main(args):
         # hls_model_ccs.build()
 
         ## Collect results from Catapult logs
-        ## TODO: Add here a function that collects Area, Latency, and II results from the Catapult .rpt files
-        area_hls, latency_hls, ii_hls = get_area_latency_ii_from_file(CATAPULT_RTL_RPT)
+        area_hls, latency_hls, ii_hls = get_hls_area_latency_ii_from_file(CATAPULT_RTL_RPT)
+
+        ## TODO: Add here a function that collects Area, Latency, and II results from RTL compiler logs
+        area_ls = get_rc_area(RTLCOMPILER_LOG)
 
         ## Print results on console
-        print(model_name, args.inputs, args.outputs, args.reuse_factor, args.precision, area_hls, latency_hls, ii_hls)
+        print(model_name, args.inputs, args.outputs, args.reuse_factor, args.precision, area_hls, latency_hls, ii_hls, area_ls)
 
         ## Append results to CSV file
         file_exists = os.path.isfile('dse.csv')
         with open('dse.csv', 'a', newline='') as csvfile:
-            fieldnames = ['Layer', 'IOType', 'Strategy', 'Inputs', 'Outputs', 'ReuseFactor', 'Precision', 'AreaHLS', 'LatencyHLS', 'IIHLS']
+            fieldnames = ['Layer', 'IOType', 'Strategy', 'Inputs', 'Outputs', 'ReuseFactor', 'Precision', 'AreaHLS', 'LatencyHLS', 'IIHLS', 'AreaLS']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             if not file_exists:
                 writer.writeheader()
@@ -154,7 +157,8 @@ def main(args):
                         'Precision': args.precision,
                         'AreaHLS': area_hls,
                         'LatencyHLS': latency_hls,
-                        'IIHLS': ii_hls
+                        'IIHLS': ii_hls,
+                        'AreaLS': area_ls
                     })
     else:
         print('============================================================================================')
