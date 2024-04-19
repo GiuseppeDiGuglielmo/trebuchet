@@ -133,7 +133,7 @@ def main(args):
         ## Collect results from Catapult logs
         area_hls, latency_hls, ii_hls = get_hls_area_latency_ii_from_file(CATAPULT_RTL_RPT)
 
-        ## TODO: Add here a function that collects Area, Latency, and II results from RTL compiler logs
+        ## TODO: Add here a function that collects Area results from RTL compiler logs
         area_ls = get_rc_area(RTLCOMPILER_LOG)
 
         ## Print results on console
