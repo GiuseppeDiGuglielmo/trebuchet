@@ -56,7 +56,20 @@ def get_hls_area_latency_ii_from_file(filename):
             break
     return area, latency, ii
 
-# TODO: Edit this
+
 def get_rc_area(filename):
+    with open(filename, 'r') as f:
+        text = f.read()
+        lines = text.splitlines()
+        total_line_found = False  
+        for line in lines:
+            if re.match(r"^--\s+END\s+Synthesis\s+area\s+report\s+for\s+design", line, flags=re.IGNORECASE):
+                total_line_found = True
+                break  
+
+        if total_line_found:
+            data_line_index = lines.index(line) - 2
+            words = lines[data_line_index].split()
+            return str(words[2]) 
     return 0
 
