@@ -5,8 +5,8 @@ help:
 .PHONY: help
 
 #PYTHONPATH ?= ${MGC_HOME}/shared/pkgs/ccs_hls4ml/hls4ml
-PYTHONPATH ?= /asic/projects/C/CATAPULT/gdg/catapult_hls4ml_dev/2024.1/ccs_hls4ml/hls4ml
-#PYTHONPATH = /asic/projects/C/CATAPULT/gdg/catapult_hls4ml_dev/git/hls4ml
+#PYTHONPATH ?= /asic/projects/C/CATAPULT/gdg/catapult_hls4ml_dev/2024.1/ccs_hls4ml/hls4ml
+PYTHONPATH = /asic/projects/C/CATAPULT/gdg/catapult_hls4ml_dev/git/hls4ml
 
 IO ?= "io_stream"
 ST ?= "Resource"

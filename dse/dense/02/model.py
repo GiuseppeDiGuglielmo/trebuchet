@@ -89,6 +89,7 @@ def main(args):
     ## General project settings
     config_ccs['Backend'] = 'Catapult'
     config_ccs['ProjectName'] = proj_name
+    config_ccs['ProjectDir'] = f'{proj_name}_prj' #TODO This seems to be part of the Catapult backend, but not in Vivado?
     config_ccs['OutputDir'] = HLS4ML_PRJ_DIR
 
     ## Model information files saved in the previous step
@@ -127,22 +128,22 @@ def main(args):
     if args.synth:
         print('============================================================================================')
         print('Synthesizing HLS C++ model using Catapult')
-        hls_model_ccs.build(csim=True, synth=False, cosim=True, validation=False, vsynth=True, bup=False)
+        hls_model_ccs.build(csim=True, synth=True, cosim=True, validation=False, vsynth=True, bup=False)
         # hls_model_ccs.build()
 
         ## Collect results from Catapult logs
         area_hls, latency_hls, ii_hls = get_hls_area_latency_ii_from_file(CATAPULT_RTL_RPT)
 
-        ## TODO: Add here a function that collects Area results from RTL compiler logs
-        area_ls = get_rc_area(RTLCOMPILER_LOG)
+        ## Collect results from RTL compiler logs
+        area_syn = get_rc_area(RTLCOMPILER_LOG)
 
         ## Print results on console
-        print(model_name, args.inputs, args.outputs, args.reuse_factor, args.precision, area_hls, latency_hls, ii_hls, area_ls)
+        print(model_name, args.inputs, args.outputs, args.reuse_factor, args.precision, area_hls, latency_hls, ii_hls, area_syn)
 
         ## Append results to CSV file
         file_exists = os.path.isfile('dse.csv')
         with open('dse.csv', 'a', newline='') as csvfile:
-            fieldnames = ['Layer', 'IOType', 'Strategy', 'Inputs', 'Outputs', 'ReuseFactor', 'Precision', 'AreaHLS', 'LatencyHLS', 'IIHLS', 'AreaLS']
+            fieldnames = ['Layer', 'IOType', 'Strategy', 'Inputs', 'Outputs', 'ReuseFactor', 'Precision', 'AreaHLS', 'LatencyHLS', 'IIHLS', 'AreaSYN']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             if not file_exists:
                 writer.writeheader()
@@ -158,7 +159,7 @@ def main(args):
                         'AreaHLS': area_hls,
                         'LatencyHLS': latency_hls,
                         'IIHLS': ii_hls,
-                        'AreaLS': area_ls
+                        'AreaSYN': area_syn
                     })
     else:
         print('============================================================================================')
