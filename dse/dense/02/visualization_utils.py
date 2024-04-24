@@ -29,7 +29,7 @@ def plot_area_latency_vs_reusefactor(data, inputs, outputs, strategy, iotype, sh
         ax1.set_ylabel('Area', color=color_area)
 
     if show_area_hls:
-        line1 = ax1.plot(selected_rows['ReuseFactor'], selected_rows['AreaHLS'], marker='o', color=color_area, linestyle='--', label='Area (HLS)')
+        line1 = ax1.plot(selected_rows['ReuseFactor'], selected_rows['AreaHLS'], marker='x', color=color_area, linestyle='--', label='Area (HLS)')
     if show_area_syn:
         line2 = ax1.plot(selected_rows['ReuseFactor'], selected_rows['AreaSYN'], marker='o', color=color_area, label='Area (SYN)')
 
@@ -161,7 +161,7 @@ def plot_multiple_area_latency_vs_reusefactor(data, quadrant_pairs, strategy, io
             ax.set_yticks([])
             
         if show_area_hls:
-            ax.plot(selected_rows['ReuseFactor'], selected_rows['AreaHLS'], marker='o', color=color_area, linestyle='--', label=f'Area HLS ({inputs}x{outputs})')
+            ax.plot(selected_rows['ReuseFactor'], selected_rows['AreaHLS'], marker='x', color=color_area, linestyle='--', label=f'Area HLS ({inputs}x{outputs})')
         if show_area_syn:
             ax.plot(selected_rows['ReuseFactor'], selected_rows['AreaSYN'], marker='o', color=color_area, label=f'Area SYN ({inputs}x{outputs})')
         
@@ -220,10 +220,10 @@ def plot_area_vs_latency(data, inputs, outputs, strategy, iotype, show_area_hls=
     
     # Plotting Area vs. Latency
     if show_area_hls:
-        line1 = ax.plot(selected_rows['LatencyHLS'], selected_rows['AreaHLS'], marker='o', linestyle='--', color='tab:green', label='Area (HLS)')
+        line1 = ax.plot(selected_rows['LatencyHLS'], selected_rows['AreaHLS'], marker='x', linestyle='--', color='tab:green', label='Area (HLS)')
         # Higlight Pareto points
         for latency, area, pareto in zip(selected_rows['LatencyHLS'], selected_rows['AreaHLS'], pareto_mask_hls):
-            ax.plot(latency, area, marker='o', color='tab:orange' if pareto else 'tab:green', markersize=6)
+            ax.plot(latency, area, marker='x', color='tab:orange' if pareto else 'tab:green', markersize=6)
     
     if show_area_syn:
         line2 = ax.plot(selected_rows['LatencyHLS'], selected_rows['AreaSYN'], marker='o', linestyle='-', color='tab:green', label='Area (SYN)')
@@ -446,7 +446,7 @@ def plot_multiple_area_vs_latency(data, quadrant_pairs, strategy, iotype, vertic
         
         # Plotting Area vs. Latency
         if show_area_hls:
-            line1 = ax.plot(selected_rows['LatencyHLS'], selected_rows['AreaHLS'], marker='o', linestyle='--', color='tab:green', label='Area (HLS)')
+            line1 = ax.plot(selected_rows['LatencyHLS'], selected_rows['AreaHLS'], marker='x', linestyle='--', color='tab:green', label='Area (HLS)')
         if show_area_syn:
             line2 = ax.plot(selected_rows['LatencyHLS'], selected_rows['AreaSYN'], marker='o', linestyle='-', color='tab:green', label='Area (SYN)')
         
@@ -476,5 +476,138 @@ def plot_multiple_area_vs_latency(data, quadrant_pairs, strategy, iotype, vertic
         # Adjust text to minimize overlaps
         # adjust_text(texts, ax=ax, arrowprops=dict(arrowstyle='->', color='red'))
         
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_runtime_vs_reusefactor(data, inputs, outputs, strategy, iotype, show_runtime_hls=True, show_runtime_syn=True, show_rf1=True):
+    selected_rows = data[(data['Inputs'] == inputs) & (data['Outputs'] == outputs) & (data['Strategy'] == strategy) & (data['IOType'] == iotype)]
+    
+    # Drop rows whose RF is 1, if specified
+    if not show_rf1:
+        selected_rows = selected_rows[selected_rows['ReuseFactor'] != 1]
+    
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    # Plotting RuntimeHLS vs. ReuseFactor
+    if show_runtime_hls:
+        line1 = ax.plot(selected_rows['ReuseFactor'], selected_rows['RuntimeHLS'], marker='o', linestyle='--', color='tab:orange', label='Runtime HLS')
+    
+    # Plotting RuntimeSYN vs. ReuseFactor
+    if show_runtime_syn:
+        line2 = ax.plot(selected_rows['ReuseFactor'], selected_rows['RuntimeSYN'], marker='o', linestyle='-', color='tab:orange', label='Runtime SYN')
+    
+    ax.set_xlabel('Reuse Factor')
+    ax.set_ylabel('Runtime')
+    ax.set_title(f'Runtime HLS vs SYN Comparison, {inputs}x{outputs} ({strategy}, {iotype})')
+    
+    # Adding a legend
+    lines = []
+    if show_runtime_hls:
+        lines.append(line1[0])
+    if show_runtime_syn:
+        lines.append(line2[0])
+    ax.legend(lines, [l.get_label() for l in lines], loc='best')
+    
+    ax.grid(True)
+    
+    # Creating an inset axes for the logo
+    ax_logo = inset_axes(ax, width='10%', height='10%', loc='lower right', borderpad=3)
+    logo = mpimg.imread('hls4ml_logo.png')
+    ax_logo.imshow(logo)
+    ax_logo.axis('off')  # Hide the axes ticks and spines
+    
+    plt.show()
+
+
+def plot_interactive_runtime_vs_reusefactor(data):
+    # Create widgets for the inputs
+    inputs_widget = widgets.Dropdown(options=sorted(data['Inputs'].unique()), description='Inputs')
+    outputs_widget = widgets.Dropdown(options=sorted(data['Outputs'].unique()), description='Outputs')
+    strategy_widget = widgets.Dropdown(options=sorted(data['Strategy'].unique()), description='Strategy')
+    iotype_widget = widgets.Dropdown(options=sorted(data['IOType'].unique()), description='IOType')
+    show_runtime_hls_widget = widgets.Checkbox(value=True, description='Show Runtime HLS')
+    show_runtime_syn_widget = widgets.Checkbox(value=True, description='Show Runtime SYN')
+    show_rf1_widget = widgets.Checkbox(value=True, description='Show RF=1')
+
+    def update_plot(inputs, outputs, strategy, iotype, show_runtime_hls, show_runtime_syn, show_rf1):
+        plot_runtime_vs_reusefactor(data, inputs, outputs, strategy, iotype, show_runtime_hls, show_runtime_syn, show_rf1)
+
+    # Organizing dropdowns in a 2x2 grid layout
+    grid = widgets.GridBox(children=[
+        inputs_widget, outputs_widget,
+        strategy_widget, iotype_widget
+    ], layout=widgets.Layout(
+        grid_template_rows='auto auto auto',  # Specifies the rows size
+        grid_template_columns='50% 50%',      # Specifies the columns size
+        grid_gap='10px 10px'                  # Space between items
+    ))
+
+    # Combine the grid and checkboxes into a VBox
+    settings = widgets.VBox([grid, show_runtime_hls_widget, show_runtime_syn_widget, show_rf1_widget])
+
+    # Create an interactive widget
+    interactive_plot = widgets.interactive_output(
+        update_plot,
+        {
+            'inputs': inputs_widget,
+            'outputs': outputs_widget,
+            'strategy': strategy_widget,
+            'iotype': iotype_widget,
+            'show_runtime_hls': show_runtime_hls_widget,
+            'show_runtime_syn': show_runtime_syn_widget,
+            'show_rf1': show_rf1_widget
+        }
+    )
+
+    # Display the interactive plot widget
+    display(settings, interactive_plot)
+
+
+# +
+def plot_multiple_runtime_vs_reusefactor(data, quadrant_pairs, strategy, iotype, vertical=True, show_runtime_hls=True, show_runtime_syn=True, show_rf1=True):
+    num_plots = len(quadrant_pairs)
+
+    # Determine the layout of subplots based on orientation
+    if vertical:
+        nrows, ncols = num_plots, 1
+        fig, axes = plt.subplots(nrows, ncols, figsize=(8, 4 * num_plots))  # 8 inches wide, 4 inches per plot
+    else:
+        nrows, ncols = 1, num_plots
+        fig, axes = plt.subplots(nrows, ncols, figsize=(8 * num_plots, 6))  # 6 inches tall, 8 inches per plot
+
+    # Make sure axes is an iterable (array) even if there is only one subplot
+    if num_plots == 1:
+        axes = [axes]
+
+    for i, (inputs, outputs) in enumerate(quadrant_pairs):
+        ax = axes[i]
+        selected_rows = data[(data['Inputs'] == inputs) & (data['Outputs'] == outputs) & (data['Strategy'] == strategy) & (data['IOType'] == iotype)]
+        
+        # Drop rows whose RF is 1, if specified
+        if not show_rf1:
+            selected_rows = selected_rows[selected_rows['ReuseFactor'] != 1]
+
+        # Plotting RuntimeHLS vs. ReuseFactor
+        if show_runtime_hls:
+            ax.plot(selected_rows['ReuseFactor'], selected_rows['RuntimeHLS'], marker='o', linestyle='--', color='tab:orange', label='Runtime HLS')
+
+        # Plotting RuntimeSYN vs. ReuseFactor
+        if show_runtime_syn:
+            ax.plot(selected_rows['ReuseFactor'], selected_rows['RuntimeSYN'], marker='o', linestyle='-', color='tab:orange', label='Runtime SYN')
+
+        ax.set_xlabel('Reuse Factor')
+        ax.set_ylabel('Runtime')
+        ax.set_title(f'Runtime HLS vs SYN, {inputs}x{outputs} ({strategy}, {iotype})')
+
+        ax.legend(loc='best')
+        ax.grid(True)
+
+#         # Optional: Add a logo to each subplot
+#         ax_logo = inset_axes(ax, width='10%', height='10%', loc='lower right', borderpad=3)
+#         logo = mpimg.imread('hls4ml_logo.png')
+#         ax_logo.imshow(logo)
+#         ax_logo.axis('off')  # Hide the axes ticks and spines
+
     plt.tight_layout()
     plt.show()

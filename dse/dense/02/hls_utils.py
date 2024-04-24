@@ -30,7 +30,7 @@ def get_area_latency_from_file(filename, layer):
     return None, None
 
 def parse_ac_fixed(input_string):
-    pattern = r"ac_fixed<(\d+),(\d+),(true|false)>"
+    pattern = r'ac_fixed<(\d+),(\d+),(true|false)>'
     match = re.search(pattern, input_string)
 
     if match:
@@ -47,11 +47,11 @@ def get_hls_area_latency_ii_from_file(filename):
         lines = file.readlines()
         area, latency,ii = 0,0,0
     for line in lines:
-        if re.match(r"^  Design Total:", line, flags=re.IGNORECASE):
+        if re.match(r'^  Design Total:', line, flags=re.IGNORECASE):
             values = line.split()[3:5]
             latency = values[0]
             ii = values[1]
-        if re.match(r"^  Total Area Score:", line, flags=re.IGNORECASE):
+        if re.match(r'^  Total Area Score:', line, flags=re.IGNORECASE):
             area = line.split()[-1]
             break
     return area, latency, ii
@@ -63,7 +63,7 @@ def get_rc_area(filename):
         lines = text.splitlines()
         total_line_found = False
         for line in lines:
-            if re.match(r"^--\s+END\s+Synthesis\s+area\s+report\s+for\s+design", line, flags=re.IGNORECASE):
+            if re.match(r'^--\s+END\s+Synthesis\s+area\s+report\s+for\s+design', line, flags=re.IGNORECASE):
                 total_line_found = True
                 break
 
@@ -72,4 +72,41 @@ def get_rc_area(filename):
             words = lines[data_line_index].split()
             return str(words[2])
     return 0
+
+def get_synthesis_time(filename, prefix='C/RTL'):
+    # Regular expression to match the synthesis time line
+    time_pattern = r'{} SYNTHESIS COMPLETED IN (\d+h)?(\d+m)?(\d+s)?'.format(prefix)
+
+    # Initialize total synthesis time in seconds
+    total_seconds = 0
+
+    try:
+        # Open the log file
+        with open(filename, 'r') as file:
+            # Read each line in the file
+            for line in file:
+                # Search for the time pattern in each line
+                match = re.search(time_pattern, line)
+                if match:
+                    # Extract hours, minutes, and seconds from the match groups
+                    hours = match.group(1)
+                    minutes = match.group(2)
+                    seconds = match.group(3)
+
+                    print(f'{filename}/catapult.log {prefix} {hours} {minutes} {seconds}')
+
+                    # Convert each time component to seconds and sum them up
+                    if hours:
+                        total_seconds += int(hours[:-1]) * 3600  # Remove 'h' and convert to seconds
+                    if minutes:
+                        total_seconds += int(minutes[:-1]) * 60  # Remove 'm' and convert to seconds
+                    if seconds:
+                        total_seconds += int(seconds[:-1])  # Remove 's'
+
+    except FileNotFoundError:
+        print(f'Error: The file {filename} does not exist.'.format(filename))
+    except Exception as e:
+        print(f'An error occurred: {e}')
+
+    return total_seconds
 

@@ -40,6 +40,7 @@ def main(args):
     CATAPULT_HLS4ML_TXT = f'{HLS4ML_PRJ_DIR}/{proj_name}_prj/{model_name}.v1/nnet_layer_results.txt'
     CATAPULT_RTL_RPT = f'{HLS4ML_PRJ_DIR}/{proj_name}_prj/{model_name}.v1/rtl.rpt'
     RTLCOMPILER_LOG = f'{HLS4ML_PRJ_DIR}/{proj_name}_prj/{model_name}.v1/rc.log'
+    CATAPULT_LOG = f'{HLS4ML_PRJ_DIR}/catapult.log'
 
     ## Determine the directory containing this model.py script in order to locate the associated .dat file
     sfd = os.path.dirname(__file__)
@@ -137,13 +138,19 @@ def main(args):
         ## Collect results from RTL compiler logs
         area_syn = get_rc_area(RTLCOMPILER_LOG)
 
+        ## Collect Catapult runtime
+        runtime_hls = get_synthesis_time(CATAPULT_LOG, 'C/RTL')
+
+        ## Collect RC runtime
+        runtime_syn = get_synthesis_time(CATAPULT_LOG, 'RC')
+
         ## Print results on console
-        print(model_name, args.inputs, args.outputs, args.reuse_factor, args.precision, area_hls, latency_hls, ii_hls, area_syn)
+        print(model_name, args.inputs, args.outputs, args.reuse_factor, args.precision, area_hls, latency_hls, ii_hls, area_syn, runtime_hls, runtime_syn)
 
         ## Append results to CSV file
         file_exists = os.path.isfile('dse.csv')
         with open('dse.csv', 'a', newline='') as csvfile:
-            fieldnames = ['Layer', 'IOType', 'Strategy', 'Inputs', 'Outputs', 'ReuseFactor', 'Precision', 'AreaHLS', 'LatencyHLS', 'IIHLS', 'AreaSYN']
+            fieldnames = ['Layer', 'IOType', 'Strategy', 'Inputs', 'Outputs', 'ReuseFactor', 'Precision', 'AreaHLS', 'LatencyHLS', 'IIHLS', 'AreaSYN', 'RuntimeHLS', 'RuntimeSYN']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             if not file_exists:
                 writer.writeheader()
@@ -159,7 +166,9 @@ def main(args):
                         'AreaHLS': area_hls,
                         'LatencyHLS': latency_hls,
                         'IIHLS': ii_hls,
-                        'AreaSYN': area_syn
+                        'AreaSYN': area_syn,
+                        'RuntimeHLS': runtime_hls,
+                        'RuntimeSYN': runtime_syn
                     })
     else:
         print('============================================================================================')
