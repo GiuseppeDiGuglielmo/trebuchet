@@ -55,8 +55,7 @@ run-dse:
 
 jupyter:
 	PYTHONPATH=$(PYTHONPATH) \
-		jupyter notebook
-	#--no-browser --port=8887
+		jupyter notebook --no-browser --port=8887
 .PHONY: jupyter
 
 clean:
