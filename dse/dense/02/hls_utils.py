@@ -58,8 +58,8 @@ def get_hls_area_latency_ii_from_file(filename):
 
 
 def get_rc_area(filename):
-    with open(filename, 'r') as f:
-        text = f.read()
+    with open(filename, 'r') as file:
+        text = file.read()
         lines = text.splitlines()
         total_line_found = False
         for line in lines:
@@ -72,4 +72,34 @@ def get_rc_area(filename):
             words = lines[data_line_index].split()
             return str(words[2])
     return 0
+
+
+def  get_hls_ls_runtime(filename):
+    
+    hls_pattern = r"^.*\*\*\*\*\* C/RTL SYNTHESIS COMPLETED IN (\d+)h(\d+)m(\d+)s .*$"
+    ls_pattern = r"^.*\*\*\*\*\* RC SYNTHESIS COMPLETED IN (\d+)h(\d+)m(\d+)s .*$"
+     
+    with open(log_file, 'r') as file:
+
+        data_found = False
+        values =[0,0]
+        for line in file:
+
+            hls_match = re.search(hls_pattern, line)
+            ls_match = re.search(ls_pattern, line)
+
+            if hls_match:
+                hls_hours, hls_minutes, hls_seconds = map(int, hls_match.groups())
+                hls_time= hls_hours * 3600 + hls_minutes * 60 + hls_seconds
+
+            if ls_match :
+                print(line)
+                ls_hours, ls_minutes, ls_seconds = map(int, ls_match.groups())
+                ls_time= ls_hours * 3600 + ls_minutes * 60 + ls_seconds
+                return hls_time,ls_time
+                
+        return None, None
+    
+        
+
 

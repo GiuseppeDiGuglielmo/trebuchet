@@ -6,6 +6,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from ml_utils import *
 from hls_utils import *
 
+import time
 import csv
 import shutil
 import hls4ml
@@ -22,6 +23,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.models import load_model
 from sklearn.metrics import accuracy_score
 from qkeras import *
+
 
 def main(args):
     ## Define output files/locations:
@@ -40,6 +42,7 @@ def main(args):
     CATAPULT_HLS4ML_TXT = f'{HLS4ML_PRJ_DIR}/{proj_name}_prj/{model_name}.v1/nnet_layer_results.txt'
     CATAPULT_RTL_RPT = f'{HLS4ML_PRJ_DIR}/{proj_name}_prj/{model_name}.v1/rtl.rpt'
     RTLCOMPILER_LOG = f'{HLS4ML_PRJ_DIR}/{proj_name}_prj/{model_name}.v1/rc.log'
+    CATAPULT_LOG = f'{HLS4ML_PRJ_DIR}/catapult.log'
 
     ## Determine the directory containing this model.py script in order to locate the associated .dat file
     sfd = os.path.dirname(__file__)
@@ -89,7 +92,6 @@ def main(args):
     ## General project settings
     config_ccs['Backend'] = 'Catapult'
     config_ccs['ProjectName'] = proj_name
-    config_ccs['ProjectDir'] = f'{proj_name}_prj' #TODO This seems to be part of the Catapult backend, but not in Vivado?
     config_ccs['OutputDir'] = HLS4ML_PRJ_DIR
 
     ## Model information files saved in the previous step
@@ -122,28 +124,35 @@ def main(args):
 
     print('\n============================================================================================')
     print('HLS4ML converting keras model/Catapult to HLS C++')
+    start_time = time.time()
     hls_model_ccs = hls4ml.converters.keras_to_hls(config_ccs)
     hls_model_ccs.compile()
 
     if args.synth:
         print('============================================================================================')
         print('Synthesizing HLS C++ model using Catapult')
-        hls_model_ccs.build(csim=True, synth=True, cosim=True, validation=False, vsynth=True, bup=False)
+        hls_model_ccs.build(csim=True, synth=False, cosim=True, validation=False, vsynth=True, bup=False)
+        end_time = time.time()
         # hls_model_ccs.build()
-
+        total_time = int(end_time - start_time)
         ## Collect results from Catapult logs
         area_hls, latency_hls, ii_hls = get_hls_area_latency_ii_from_file(CATAPULT_RTL_RPT)
 
-        ## Collect results from RTL compiler logs
-        area_syn = get_rc_area(RTLCOMPILER_LOG)
+        hls_time, ls_time = get_hls_ls_runtime(CATAPULT_LOG)
+        
+
+        ## Function that collects Area results from RTL compiler logs
+        area_ls = get_rc_area(RTLCOMPILER_LOG)
+
+
 
         ## Print results on console
-        print(model_name, args.inputs, args.outputs, args.reuse_factor, args.precision, area_hls, latency_hls, ii_hls, area_syn)
+        print(model_name, args.inputs, args.outputs, args.reuse_factor, args.precision, area_hls, latency_hls, ii_hls, area_ls, total_time, hls_time, ls_time)
 
         ## Append results to CSV file
         file_exists = os.path.isfile('dse.csv')
         with open('dse.csv', 'a', newline='') as csvfile:
-            fieldnames = ['Layer', 'IOType', 'Strategy', 'Inputs', 'Outputs', 'ReuseFactor', 'Precision', 'AreaHLS', 'LatencyHLS', 'IIHLS', 'AreaSYN']
+            fieldnames = ['Layer', 'IOType', 'Strategy', 'Inputs', 'Outputs', 'ReuseFactor', 'Precision', 'AreaHLS', 'LatencyHLS', 'IIHLS', 'AreaLS', 'Time', 'HLSTime', 'LSTime']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             if not file_exists:
                 writer.writeheader()
@@ -159,7 +168,10 @@ def main(args):
                         'AreaHLS': area_hls,
                         'LatencyHLS': latency_hls,
                         'IIHLS': ii_hls,
-                        'AreaSYN': area_syn
+                        'AreaLS': area_ls,
+                        'Time': total_time,
+                        'HLSTime':hls_time,
+                        'LSTime': ls_time
                     })
     else:
         print('============================================================================================')
