@@ -491,7 +491,7 @@ def plot_runtime_vs_reusefactor(data, inputs, outputs, strategy, iotype, show_ru
     
     # Plotting RuntimeHLS vs. ReuseFactor
     if show_runtime_hls:
-        line1 = ax.plot(selected_rows['ReuseFactor'], selected_rows['RuntimeHLS'], marker='o', linestyle='--', color='tab:orange', label='Runtime HLS')
+        line1 = ax.plot(selected_rows['ReuseFactor'], selected_rows['RuntimeHLS'], marker='x', linestyle='--', color='tab:orange', label='Runtime HLS')
     
     # Plotting RuntimeSYN vs. ReuseFactor
     if show_runtime_syn:
@@ -590,7 +590,7 @@ def plot_multiple_runtime_vs_reusefactor(data, quadrant_pairs, strategy, iotype,
 
         # Plotting RuntimeHLS vs. ReuseFactor
         if show_runtime_hls:
-            ax.plot(selected_rows['ReuseFactor'], selected_rows['RuntimeHLS'], marker='o', linestyle='--', color='tab:orange', label='Runtime HLS')
+            ax.plot(selected_rows['ReuseFactor'], selected_rows['RuntimeHLS'], marker='x', linestyle='--', color='tab:orange', label='Runtime HLS')
 
         # Plotting RuntimeSYN vs. ReuseFactor
         if show_runtime_syn:

@@ -232,3 +232,5 @@ dense,io_stream,Resource,4,4,13,"ac_fixed<16,6,true>",3457.6,16,16,2819.600,13,2
 dense,io_stream,Resource,4,4,14,"ac_fixed<16,6,true>",3457.6,16,16,2819.600,13,28
 dense,io_stream,Resource,4,4,15,"ac_fixed<16,6,true>",3457.6,16,16,2819.600,13,27
 dense,io_stream,Resource,4,4,16,"ac_fixed<16,6,true>",3457.6,16,16,2819.600,13,29
+dense,io_parallel,Latency,4,4,5,"ac_fixed<16,6,true>",4536.3,77,82,4660.586,729,37
+dense,io_parallel,Latency,4,4,6,"ac_fixed<16,6,true>",4231.5,44,50,4531.576,29,35
