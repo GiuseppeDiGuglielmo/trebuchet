@@ -5,18 +5,22 @@ help:
 .PHONY: help
 
 #PYTHONPATH ?= ${MGC_HOME}/shared/pkgs/ccs_hls4ml/hls4ml
-#PYTHONPATH ?= /asic/projects/C/CATAPULT/gdg/catapult_hls4ml_dev/2024.1/ccs_hls4ml/hls4ml
-PYTHONPATH = /asic/projects/C/CATAPULT/gdg/catapult_hls4ml_dev/git/hls4ml
+#PYTHONPATH ?= /asic/projects/C/CATAPULT/gdg/catapult_hls4ml_dev/2024.1_1/ccs_hls4ml/hls4ml
+PYTHONPATH ?= /asic/projects/C/CATAPULT/gdg/catapult_hls4ml_dev/git/hls4ml
 
-IO ?= "io_stream"
-ST ?= "Resource"
+#
+H ?= 8
+W ?= 8
+C ?= 4
+O ?= 2
+K := 3
+P := "valid"
+S := 1
+#
+IO ?= "io_parallel"
+ST ?= "Latency"
 RF ?= 1
-IN ?= 8
-OU ?= 2
-
-PADDED_RF = $(shell printf '%03d' $(RF))
-PADDED_IN = $(shell printf '%03d' $(IN))
-PADDED_OU = $(shell printf '%03d' $(OU))
+PR ?= "ac_fixed<16,6,true>"
 
 PROJECT_DIR ?= hls4ml_prjs
 MODEL_DIR ?= models
@@ -25,11 +29,17 @@ DATA_DIR ?= data
 run-ml:
 	PYTHONPATH=$(PYTHONPATH) \
 		python model.py \
+			--height $(H) \
+			--width $(W) \
+			--channels $(C) \
+			--outputs $(O) \
+			--kernel $(K) \
+			--padding $(P) \
+			--stride $(S) \
 			--iotype $(IO) \
 			--strategy $(ST) \
 			--reuse_factor $(RF) \
-			--inputs $(IN) \
-			--outputs $(OU) \
+			--precision $(PR) \
 			--project_dir $(PROJECT_DIR) \
 			--model_dir $(MODEL_DIR) \
 			--data_dir $(DATA_DIR)
@@ -38,15 +48,21 @@ run-ml:
 run-ml-hls:
 	PYTHONPATH=$(PYTHONPATH) \
 		python model.py \
-			--synth \
+			--height $(H) \
+			--width $(W) \
+			--channels $(C) \
+			--outputs $(O) \
+			--kernel $(K) \
+			--padding $(P) \
+			--stride $(S) \
 			--iotype $(IO) \
 			--strategy $(ST) \
 			--reuse_factor $(RF) \
-			--inputs $(IN) \
-			--outputs $(OU) \
+			--precision $(PR) \
 			--project_dir $(PROJECT_DIR) \
 			--model_dir $(MODEL_DIR) \
-			--data_dir $(DATA_DIR)
+			--data_dir $(DATA_DIR) \
+			--synth
 .PHONY: run-ml-hls
 
 run-dse:

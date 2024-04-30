@@ -19,9 +19,9 @@ def plot_area_latency_vs_reusefactor(data, inputs, outputs, strategy, iotype, sh
     if not show_rf1:
         print('ATTENTION: Results for ReuseFactor==1 are dropped!')
         selected_rows = selected_rows[selected_rows['ReuseFactor'] != 1]
-    
+
     fig, ax1 = plt.subplots(figsize=(12, 6))
-    
+
     color_area = 'tab:blue'
     ax1.set_xlabel('Reuse Factor')
     ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
@@ -37,7 +37,7 @@ def plot_area_latency_vs_reusefactor(data, inputs, outputs, strategy, iotype, sh
         ax1.tick_params(axis='y', labelcolor=color_area)
     else:
         ax1.set_yticks([])
-    
+
     if show_latency:
         ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
         color_latency = 'tab:red'
@@ -45,7 +45,7 @@ def plot_area_latency_vs_reusefactor(data, inputs, outputs, strategy, iotype, sh
         ax2.yaxis.set_major_locator(MaxNLocator(integer=True))
         line3 = ax2.plot(selected_rows['ReuseFactor'], selected_rows['LatencyHLS'], marker='o', color=color_latency, linestyle='-', label='Latency')
         ax2.tick_params(axis='y', labelcolor=color_latency)
-    
+
     # added a legend
     lines = []
     if show_area_hls:
@@ -56,7 +56,7 @@ def plot_area_latency_vs_reusefactor(data, inputs, outputs, strategy, iotype, sh
         lines = lines + line3
     labels = [l.get_label() for l in lines]
     plt.legend(lines, labels, loc=0)
-    
+
     plt.title(f'Area and Latency vs. Reuse Factor, {inputs}x{outputs} ({strategy}, {iotype})')
 
     # Create an inset axes for the logo
@@ -64,7 +64,7 @@ def plot_area_latency_vs_reusefactor(data, inputs, outputs, strategy, iotype, sh
     logo = mpimg.imread('hls4ml_logo.png')
     ax_logo.imshow(logo)
     ax_logo.axis('off')  # Hide the axes ticks and spines
-    
+
     plt.show()
 
 
@@ -139,7 +139,7 @@ def plot_multiple_area_latency_vs_reusefactor(data, quadrant_pairs, strategy, io
         axes = axes.flatten()
     else:
         axes = [axes]
-        
+
     color_area = 'tab:blue'
     color_latency = 'tab:red'
 
@@ -159,19 +159,19 @@ def plot_multiple_area_latency_vs_reusefactor(data, quadrant_pairs, strategy, io
             ax.set_ylabel('Area')
         else:
             ax.set_yticks([])
-            
+
         if show_area_hls:
             ax.plot(selected_rows['ReuseFactor'], selected_rows['AreaHLS'], marker='x', color=color_area, linestyle='--', label=f'Area HLS ({inputs}x{outputs})')
         if show_area_syn:
             ax.plot(selected_rows['ReuseFactor'], selected_rows['AreaSYN'], marker='o', color=color_area, label=f'Area SYN ({inputs}x{outputs})')
-        
+
         # Setup the latency plot on the same axis
         if show_latency:
             ax2 = ax.twinx()
             ax2.plot(selected_rows['ReuseFactor'], selected_rows['LatencyHLS'], marker='o', color=color_latency, linestyle='-', label='Latency HLS')
             ax2.set_ylabel('Latency')
             ax2.yaxis.set_major_locator(MaxNLocator(integer=True))
-        
+
         # Set plot titles and legends
         ax.set_title(f'{inputs}x{outputs} ({strategy}, {iotype})')
         if show_area_hls or show_area_syn:
@@ -202,11 +202,11 @@ def is_pareto_optimal(costs):
 # Plotting with Latency on the X-axis and Area on the Y-axis
 def plot_area_vs_latency(data, inputs, outputs, strategy, iotype, show_area_hls=True, show_area_syn=True, show_rf1=True, show_rf=True, show_pareto=True):
     selected_rows = data[(data['Inputs'] == inputs) & (data['Outputs'] == outputs) & (data['Strategy'] == strategy) & (data['IOType'] == iotype)]
-    
+
     # Drop rows whose RF is 1
     if not show_rf1:
         selected_rows = selected_rows[selected_rows['ReuseFactor'] != 1]
-    
+
     # Get pareto points
     pareto_mask_hls = np.array([False] * len(selected_rows))
     pareto_mask_syn = np.array([False] * len(selected_rows))
@@ -215,30 +215,30 @@ def plot_area_vs_latency(data, inputs, outputs, strategy, iotype, show_area_hls=
         pareto_mask_hls = is_pareto_optimal(costs_hls)
         costs_syn = np.vstack((selected_rows['LatencyHLS'], selected_rows['AreaSYN'])).T
         pareto_mask_syn = is_pareto_optimal(costs_syn)
-    
+
     fig, ax = plt.subplots(figsize=(12, 6))
-    
+
     # Plotting Area vs. Latency
     if show_area_hls:
         line1 = ax.plot(selected_rows['LatencyHLS'], selected_rows['AreaHLS'], marker='x', linestyle='--', color='tab:green', label='Area (HLS)')
         # Higlight Pareto points
         for latency, area, pareto in zip(selected_rows['LatencyHLS'], selected_rows['AreaHLS'], pareto_mask_hls):
             ax.plot(latency, area, marker='x', color='tab:orange' if pareto else 'tab:green', markersize=6)
-    
+
     if show_area_syn:
         line2 = ax.plot(selected_rows['LatencyHLS'], selected_rows['AreaSYN'], marker='o', linestyle='-', color='tab:green', label='Area (SYN)')
         # Higlight Pareto points
         for latency, area, pareto in zip(selected_rows['LatencyHLS'], selected_rows['AreaSYN'], pareto_mask_syn):
             ax.plot(latency, area, marker='o', color='tab:red' if pareto else 'tab:green', markersize=6)
-    
-    
+
+
     ax.set_xlabel('Latency')
     ax.set_ylabel('Area')
     ax.set_title(f'Area vs. Latency, {inputs}x{outputs} ({strategy}, {iotype})')
 
     # List to hold the text objects for adjustment
     texts = []
-    
+
     # Annotate each point with the ReuseFactor
     if show_rf:
         for idx, row in selected_rows.iterrows():
@@ -260,12 +260,12 @@ def plot_area_vs_latency(data, inputs, outputs, strategy, iotype, show_area_hls=
 
     # Adjust text to minimize overlaps
     adjust_text(texts, arrowprops=dict(arrowstyle='->', color='red'))
-    # adjust_text(texts, 
-    #             ax=ax, 
-    #             expand_points=(1.2, 1.5), 
-    #             expand_text=(1.1, 1.2), 
-    #             force_points=(0.5, 0.9), 
-    #             force_text=(0.5, 0.9), 
+    # adjust_text(texts,
+    #             ax=ax,
+    #             expand_points=(1.2, 1.5),
+    #             expand_text=(1.1, 1.2),
+    #             force_points=(0.5, 0.9),
+    #             force_text=(0.5, 0.9),
     #             arrowprops=dict(arrowstyle='->', color='red'))
 
     # Creating an inset axes for the logo
@@ -273,7 +273,7 @@ def plot_area_vs_latency(data, inputs, outputs, strategy, iotype, show_area_hls=
     logo = mpimg.imread('hls4ml_logo.png')
     ax_logo.imshow(logo)
     ax_logo.axis('off')  # Hide the axes ticks and spines
-    
+
     plt.show()
 
 
@@ -349,7 +349,7 @@ def display_interactive_table(data):
         description='Precision:',
         disabled=False
     )
-    
+
     # Create range sliders for numerical columns
     inputs_slider = widgets.IntRangeSlider(
         value=[data['Inputs'].min(), data['Inputs'].max()],
@@ -358,7 +358,7 @@ def display_interactive_table(data):
         step=1,
         description='Inputs Range:'
     )
-    
+
     outputs_slider = widgets.IntRangeSlider(
         value=[data['Outputs'].min(), data['Outputs'].max()],
         min=data['Outputs'].min(),
@@ -366,7 +366,7 @@ def display_interactive_table(data):
         step=1,
         description='Outputs Range:'
     )
-    
+
     reuse_factor_slider = widgets.IntRangeSlider(
         value=[data['ReuseFactor'].min(), data['ReuseFactor'].max()],
         min=data['ReuseFactor'].min(),
@@ -374,12 +374,12 @@ def display_interactive_table(data):
         step=1,
         description='Reuse Factor Range:'
     )
-    
+
     # Function to filter data based on selections
     def filter_data(layers, iotypes, strategies, precisions, inputs_range, outputs_range, reuse_factor_range):
         filtered_data = data[
-            (data['Layer'].isin(layers)) & 
-            (data['IOType'].isin(iotypes)) & 
+            (data['Layer'].isin(layers)) &
+            (data['IOType'].isin(iotypes)) &
             (data['Strategy'].isin(strategies)) &
             (data['Precision'].isin(precisions)) &
             (data['Inputs'] >= inputs_range[0]) & (data['Inputs'] <= inputs_range[1]) &
@@ -388,15 +388,15 @@ def display_interactive_table(data):
         ]
         clear_output(wait=True)
         display(filtered_data)
-    
+
     # Arrange widgets in a grid
     grid = widgets.GridBox(children=[
-        layer_widget, iotype_widget, 
-        strategy_widget, precision_widget, 
-        inputs_slider, outputs_slider, 
+        layer_widget, iotype_widget,
+        strategy_widget, precision_widget,
+        inputs_slider, outputs_slider,
         reuse_factor_slider
     ], layout=widgets.Layout(grid_template_columns="repeat(2, 1fr)"))
-    
+
     # Interactive output linking the widgets and the display function
     out = widgets.interactive_output(filter_data, {
         'layers': layer_widget,
@@ -407,7 +407,7 @@ def display_interactive_table(data):
         'outputs_range': outputs_slider,
         'reuse_factor_range': reuse_factor_slider
     })
-    
+
     # Display the grid and the output
     display(grid, out)
 
@@ -440,16 +440,16 @@ def plot_multiple_area_vs_latency(data, quadrant_pairs, strategy, iotype, vertic
     for i, (inputs, outputs) in enumerate(quadrant_pairs):
         ax = axes[i]
         selected_rows = data[(data['Inputs'] == inputs) & (data['Outputs'] == outputs) & (data['Strategy'] == strategy) & (data['IOType'] == iotype)]
-        
+
         if not show_rf1:
             selected_rows = selected_rows[selected_rows['ReuseFactor'] != 1]
-        
+
         # Plotting Area vs. Latency
         if show_area_hls:
             line1 = ax.plot(selected_rows['LatencyHLS'], selected_rows['AreaHLS'], marker='x', linestyle='--', color='tab:green', label='Area (HLS)')
         if show_area_syn:
             line2 = ax.plot(selected_rows['LatencyHLS'], selected_rows['AreaSYN'], marker='o', linestyle='-', color='tab:green', label='Area (SYN)')
-        
+
         ax.set_xlabel('Latency')
         ax.set_ylabel('Area')
         ax.set_title(f'Area vs. Latency, {inputs}x{outputs} ({strategy}, {iotype})')
@@ -472,35 +472,35 @@ def plot_multiple_area_vs_latency(data, quadrant_pairs, strategy, iotype, vertic
         ax.legend(lines, labels, loc='best')
 
         ax.grid(True)
-        
+
         # Adjust text to minimize overlaps
         # adjust_text(texts, ax=ax, arrowprops=dict(arrowstyle='->', color='red'))
-        
+
     plt.tight_layout()
     plt.show()
 
 
 def plot_runtime_vs_reusefactor(data, inputs, outputs, strategy, iotype, show_runtime_hls=True, show_runtime_syn=True, show_rf1=True):
     selected_rows = data[(data['Inputs'] == inputs) & (data['Outputs'] == outputs) & (data['Strategy'] == strategy) & (data['IOType'] == iotype)]
-    
+
     # Drop rows whose RF is 1, if specified
     if not show_rf1:
         selected_rows = selected_rows[selected_rows['ReuseFactor'] != 1]
-    
+
     fig, ax = plt.subplots(figsize=(12, 6))
-    
+
     # Plotting RuntimeHLS vs. ReuseFactor
     if show_runtime_hls:
         line1 = ax.plot(selected_rows['ReuseFactor'], selected_rows['RuntimeHLS'], marker='x', linestyle='--', color='tab:orange', label='Runtime HLS')
-    
+
     # Plotting RuntimeSYN vs. ReuseFactor
     if show_runtime_syn:
         line2 = ax.plot(selected_rows['ReuseFactor'], selected_rows['RuntimeSYN'], marker='o', linestyle='-', color='tab:orange', label='Runtime SYN')
-    
+
     ax.set_xlabel('Reuse Factor')
     ax.set_ylabel('Runtime')
     ax.set_title(f'Runtime HLS vs SYN Comparison, {inputs}x{outputs} ({strategy}, {iotype})')
-    
+
     # Adding a legend
     lines = []
     if show_runtime_hls:
@@ -508,15 +508,15 @@ def plot_runtime_vs_reusefactor(data, inputs, outputs, strategy, iotype, show_ru
     if show_runtime_syn:
         lines.append(line2[0])
     ax.legend(lines, [l.get_label() for l in lines], loc='best')
-    
+
     ax.grid(True)
-    
+
     # Creating an inset axes for the logo
     ax_logo = inset_axes(ax, width='10%', height='10%', loc='lower right', borderpad=3)
     logo = mpimg.imread('hls4ml_logo.png')
     ax_logo.imshow(logo)
     ax_logo.axis('off')  # Hide the axes ticks and spines
-    
+
     plt.show()
 
 
@@ -583,7 +583,7 @@ def plot_multiple_runtime_vs_reusefactor(data, quadrant_pairs, strategy, iotype,
     for i, (inputs, outputs) in enumerate(quadrant_pairs):
         ax = axes[i]
         selected_rows = data[(data['Inputs'] == inputs) & (data['Outputs'] == outputs) & (data['Strategy'] == strategy) & (data['IOType'] == iotype)]
-        
+
         # Drop rows whose RF is 1, if specified
         if not show_rf1:
             selected_rows = selected_rows[selected_rows['ReuseFactor'] != 1]

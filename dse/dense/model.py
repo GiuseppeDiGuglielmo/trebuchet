@@ -3,8 +3,11 @@ import os
 os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-from ml_utils import *
-from hls_utils import *
+import sys
+sys.path.append('..')
+
+from utils.ml_utils import *
+from utils.hls_utils import *
 
 import csv
 import shutil
